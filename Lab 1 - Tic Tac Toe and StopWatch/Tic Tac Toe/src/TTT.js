@@ -12,7 +12,7 @@ class TTT{
     */
     constructor() {
         console.log("Loading TTT");
-        this.xIsNext = false;
+        this.xIsNext = true;
         this.winner = null;
         this.squares = null;
         this.winningLine = null;
@@ -21,7 +21,7 @@ class TTT{
         // map elements
         this.board = window.document.getElementById("board");
       
-        this.status = window.document.getElementById("status");
+        this.status =  window.document.getElementById("status").innerHTML;
         this.boardSquares = [
             window.document.getElementById("0"), window.document.getElementById("1"), window.document.getElementById("2"),
             window.document.getElementById("3"), window.document.getElementById("4"), window.document.getElementById("5"),
@@ -83,30 +83,12 @@ class TTT{
         this.handleClick = this.handleClick.bind(this);
     }
    
-    handleClick(event) {
-        console.log("event" + JSON.stringify(event));
-        console.log("clicked " + this.id);
-        console.log("this" + JSON.stringify(this));
+    getStatus() {
+        return window.document.getElementById("status").innerHTML;
 
-        // Get the id from the square and put it in a variable
-        // Remember that the id is an integer 0 - 8
-        console.log(event.xIsNext);
-        // Set the element in the squares array to the player's symbol
-        this.innerHTML = (this.xIsNext ? "O" : "X");
-
-        // Update the inner html for this square in the UI
-        // Set the onclick handler for this square in the UI to an empty anonymous function or arrow function
-
-
-         this.onclick = (() => { });
-       
-        // this.addEventListener("click", () => { });
-        // Update the variable xIsNext
-         this.xIsNext = !this.xIsNext;
-        // If calculateWinner returns true
-        if (this.calculateWinner() ) { alert("winner");}
-        // highlight the winner and disable all of the squares
-        // otherwise update the status in the UI to display the player
+    }
+    setStatus(status) {
+        window.document.getElementById("status").innerHTML = status;
     }
 
     calculateWinner() {
@@ -137,12 +119,56 @@ class TTT{
         //      get the next square using the current index in the winningLine array as the id
         //      add the class red to the square
         // Disable all of the squares
+         this.disableAll();
+         this.setStatus( "Winner:" + this.winner + " refresh window to play again");
+         this.winningLine.forEach(
+             (element) => {
+             
+                 this.boardSquares[element].className += " red";
+             });
     }
 
      disableAll() {
 
         // Set the onclick handler for all squares to function that does nothing
         // The id of the square is a number 0 - 8
+         this.boardSquares.forEach(
+             (element) => {
+                 element.onclick = null;
+             });
+    }
+    handleClick(event) {
+         // usage of ttt is not ideal - but couldn't acces method otherwise. // Question for Mari
+        // assume event is not the thing we want passed to this.
+
+        /*console.log("event" + JSON.stringify(event));
+        console.log("clicked " + this.id);
+        console.log("this" + JSON.stringify(this));*/
+       // console.log("Winner status" + this.calculateWinner());
+        // Get the id from the square and put it in a variable
+        // Remember that the id is an integer 0 - 8
+        
+        // Set the element in the squares array to the player's symbol
+        this.innerHTML = (ttt.xIsNext ? "X" : "O");
+        ttt.setStatus((!ttt.xIsNext ? "X" : "O") + " is next");
+        ttt.squares[this.id] = this.innerHTML;
+        // Update the inner html for this square in the UI
+        // Set the onclick handler for this square in the UI to an empty anonymous function or arrow function
+
+
+        this.onclick = (() => { });
+
+        // this.addEventListener("click", () => { });
+        // Update the variable xIsNext
+        ttt.xIsNext = !ttt.xIsNext;
+        // If calculateWinner returns true
+       
+        if (ttt.calculateWinner()) {
+           
+            ttt.highlightWinner();
+        }
+        // highlight the winner and disable all of the squares
+        // otherwise update the status in the UI to display the player
     }
 
 }
