@@ -1,0 +1,15 @@
+Setup project
+npm init
+
+
+for scripts in package.json
+"build": "rm -rf dist && babel src -d dist --presets=es2015",
+
+
+Install Webpack
+npm install -D webpack
+
+To run webpack
+in scripts of package.json
+"webpack": "webpack src/js/memes.js --output-filename dist/memes.js",
+

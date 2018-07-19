@@ -1,0 +1,16 @@
+{
+  "name": "bookmarker",
+  "version": "1.0.0",
+  "description": "Add bookmarks and store them",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bookmarker",
+    "js",
+    "es6"
+  ],
+  "author": "Robert Moore",
+  "license": "ISC"
+}
