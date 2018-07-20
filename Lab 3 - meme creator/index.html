@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <HEAD>
 <meta charset="UTF-8">
-<link rel="stylesheet" type="text/css" href="src/css/styles.css">
+
 </HEAD>
 <body>	
 <header>Meme Create</header>	
 				<section class="canvas-area ">
-					<canvas class="img-canvas">
+					<canvas class="img-canvas" id="canvas">
 						
 					</canvas>
 				</section>
 				<section class="input-area form-group">
 					<span>Source File:</span>
-					<input type="file" id="file" value="Choose File..">
+					<input type="file" id="fileSelector" value="Choose File..">
 					<span>Top Text:</span>
 					<input type="text" id="topText" >
 					<span>Bottom Text:</span>
 					<input type="text" id="bottomText" >
+					<button id="generate">Build</button>
+					<span id="downloadLink"></span>
 				</section>
 	
 </body>
