@@ -8,7 +8,7 @@
     "webpack": "webpack",
     "watch": "webpack-dev-server"
   },
-  "author": "",
+  "author": "Robert Moore",
   "license": "ISC",
   "devDependencies": {
     "babel-core": "^6.26.0",
