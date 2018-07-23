@@ -1,141 +1,69 @@
 import './general.js';
 
-/* Create a class called MidnightSky
-- Part 1 - Create and draw stationary stars
-    - Initialize instance variables for all of the ui elements in the constructor
-        -   this.$canvas = 
-        -   this.$context = 
-        -   this.$animationFrame; 
 
-    - Initilize some other instance variables that are data related in the constructor
-        this.defaults = {
-            star: {
-                color: 'rgba(255, 255, 255, .5)',
-                width: 3,
-                randomWidth: true
-            },
-            line: {
-                color: 'rgba(255, 255, 255, .5)',
-                width: 0.2
-            },
-            position: {
-                x: 0,
-                y: 0
-            },
-            width: window.innerWidth,
-            height: window.innerHeight,
-            velocity: 0.1,
-            length: 100,
-            distance: 120,
-            radius: 150,
-            stars: []
-        };
-        this.config = JSON.parse(JSON.stringify(this.defaults));
-    - Write the method setCanvas
-        -   set the width and the height of the canvas to the 
-            width and the height in the config object
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-    - Write the method setContext
-        -   set the strokeStyle, fileStyle and lineWidth properties of the context
-            based on corresponding values in the config object
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-    - Write the method setInitialPosition
-        -   set the x and y position in the config object to 
-            half of the canvas width and height respectively
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-    - Write the method createStar
-        -   make a copy of the default star characteristics
-        -   add x to the star - random number relative to the canvas width
-        -   add y to the star - random number relative to the canvas height
-        -   add vx to the star - random velocity in the x direction
-        -   add vy to the star - random velocity in the y direction
-        -   add radius to the star - random size
-        -   return the star
-        -   bind the class to the method in the constructor
-    - Write the method createStars
-        -   repeatedly call the method createStar and add the new star to the
-            array of stars in the config object.  The number of stars is in the
-            length property of the config object.
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-    -   Write the method drawStar.  Pass in a star as a parameter
-        -   it should draw one star
-        -   bind the class to the method
-    -   Write the method drawStars.  It should
-        -   clear the canvas
-        -   repeatedly call the method drawStar
-        -   bind the class to the method
-        -   call the method in the constructor
-  END OF PART 1 - TEST AND DEBUG YOUR CODE - YOU SHOULD SEE STARS ON THE PAGE
-- PART 2 - Animate the stars - you can do this with setInterval or an animation frame
-    -   Write the method moveStar.  It should take a star as it's parameter and
-        move the star based on it's x and y position as well as it's x and y velocities.
-        When the star bumps into the edge of the canvas, it should reappear on the canvas
-        in a reasonable place but don't worry too much about the physics!
-    -   Write the method moveStars.  It should repeatedly call moveStar
-    -   Write the method animateStars.  It should 
-        -   clear the canvas
-        -   move the stars
-        -   draw the stars
-    -   Setup the animation in the constructor.  It should call animateStart every 1/60th 
-        of a second.
-    -   NOTICE THAT I CREATE A NEW OBJECT WHEN YOU RESIZE THE PAGE.  YOU'LL WANT TO CANCEL
-        THE ANIMATION WHERE I'VE WRITTEN THAT COMMENT.
-  END OF PART 2 - TEST AND DEBUG YOUR CODE - YOU SHOULD SEE STARS MOVE ON THE PAGE 
-  - PART 3 - Add lines between stars that are "close" to eachother and are near the mouse
-    -   I've given you 2 methods highlight and drawLines that you can use.  Or you can write your own
-    -   Write the method drawLines
-    -   Call it in an appropriate place
-    -   Write the method highlight
-    -   Add a mousemove event handler to the canvas that references highlight.  drawLines
-        takes the position of the mouse into account.
-  END OF PART 3 - TEST AND DEBUG YOUR CODE - YOU SHOULD SEE CONSTELLATIONS ON YOUR PAGE       
+/*
+    Written by Robert Moore
+    7/23/2018
+
 */
 
 class MidnightSky {
 
     constructor(options) {
         this.devMode  = false;
+        let settings = {
+            seedRate: 10, // How many stars to spawn at once
+            seedIntervalMS: 16, // How fast to spawn stars
+            seedMaxStars:5000, // Max Number of Stars on Screen
+            backgroundColor:'#000000',  // Background Color
+            threshold:40, // How far from edge to hide stars / slowdown
+            closenessThreshold:50, // how far to be to draw lines
+            highlightMode: true // enable highlight mode
+        };
           this.defaults = {
             star: {
-                color: '#FFFFFF',
-                width: 3,
-                randomWidth: true,
-                randomColor: true
+                color: '#FFFFFF', // base star color
+                randomWidth: true, // random width of star
+                randomColor: true // Random star color
             },
             line: {
-                color: '#FFFFFF',
-                randomColor: false,
-                width: 0.2
+                color: '#FFFFFF', // The color of lines
+                randomColor: true, // Random color -  true / false
+                width: 3 // The width of star lines
             },
             position: {
-                x: 0,
-                y: 0
+                x: 0, // do not adjust
+                y: 0 // do not adjust
             },
             destination:{
-                x:0,
-                y:0
+                x:0,  // Do not Adjust
+                y:0   // do not adjust
             },
             width: window.innerWidth,
             height: window.innerHeight,
-            velocity: 0.1,
-            length: 100,
-            distance: 120,
-            radius: 3,
-            seedRate: 1,
-            seedIntervalMS: 16,
-            seedMaxStars:100,
-            backgroundColor:'000000',
-            threshold:10
+            velocity: 0.05, // Max Speed of Star
+            length: 100, // Not Implemented
+            distance: 120, // Not Implemented
+            radius: 10, // Max dimensions of star
+            gamma:0.9  // Brightness of Colors 0-1
+        };
+        this.menuSize = 20;
+        this.menuOpen = false;
+        this.banner = {
+            open: false,
+            text: "banner",
+            timeLeft: 0,
+            opacity: 1
         };
         // Create Stars container
         this.stars = [];
+        // list of keys to press
+        this.keyList = [];
         // Stars timer
         this.timer = null;
+        this.tickTime = 100;
         /* Set Defaults */
+        this.loadSettings(settings);
         this.loadSettings(this.defaults);
        /* Deal with optional options*/
        if(typeof options == 'object'){
@@ -143,10 +71,11 @@ class MidnightSky {
             this.loadSettings(options);
        }
        /* setup shorthands */
-        this.config = JSON.parse(JSON.stringify(this.defaults));
+        this.config = this.defaults;
         this.canvas =  document.getElementsByTagName("canvas")[0];
         this.ctx    = this.canvas.getContext('2d');
-
+        this.mouseX = -1; // Mouse Position X
+        this.mouseY = -1; // Mouse Position Y
         /*binds */
         this.setCanvas.bind(this);
         this.setContext.bind(this);
@@ -154,6 +83,7 @@ class MidnightSky {
         this.drawStar.bind(this);
         this.drawStars.bind(this);
         this.stopStars.bind(this);
+        this.highlight.bind(this);
 
         /* additional configuration*/
         this.setCanvas();
@@ -162,11 +92,28 @@ class MidnightSky {
         this.createStars();
         this.drawStars();
         this.animateStars();
-
+        /* watch mouse movements */
+        window.document.addEventListener("mousemove",(e) => {
+                this.mouseX = e.clientX;
+                this.mouseY = e.clientY;
+                if(this.menuOpen){
+                     if((e.clientX < this.width-this.menuSize) || (e.clientY < this.height-this.menuSize)){
+                        this.closeMenu();
+                     }
+                }
+            });
+        /* watch clicks */
+         window.document.addEventListener("click",(e) => {
+               if((e.clientX > this.width-this.menuSize) && (e.clientY > this.height-this.menuSize)){
+                    this.openMenu();
+               }
+            });
+        /* load keys*/
+        this.bindKeys();
     }
     devLog(log){
         if(this.devMode){
-            console.log("DEV:" + log);
+            console.log("DEV:"  + log);
         }
     }
     loadSettings(settings){
@@ -186,26 +133,11 @@ class MidnightSky {
         }
         this.devLog("Full List of Settings:" + JSON.stringify(this));
     }
-    /*
-     - Write the method setCanvas
-        -   set the width and the height of the canvas to the 
-            width and the height in the config object
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-        */
     setCanvas(e){
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.devLog("Setting Canvas Dimensions: " + this.canvas.width + "x" + this.canvas.height);
     }
-
-
-    /*- Write the method setContext
-        -   set the strokeStyle, fileStyle and lineWidth properties of the context
-            based on corresponding values in the config object
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-    */
     setContext(e){
         this.ctx.strokeStyle = this.star.color;
         this.devLog("Setting context strokeStyle:" + this.ctx.strokeStyle);
@@ -214,28 +146,13 @@ class MidnightSky {
         this.ctx.lineWidth = this.star.width;
         this.devLog("Setting Star Width: " + this.ctx.lineWidth);
     }
-
-    /*- Write the method setInitialPosition
-        -   set the x and y position in the config object to 
-            half of the canvas width and height respectively
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor*/
+   /* Set Initial Position of Stars */
     setInitialPosition(){
         this.position.x = Math.floor(this.width/2);
         this.position.y = Math.floor(this.height/2);
         this.devLog("Setting Initial Position:" + this.position.x + " x " + this.position.y );
     }    
-    /*
-    - Write the method createStar
-       // -   make a copy of the default star characteristics
-        -   add x to the star - random number relative to the canvas width
-        -   add y to the star - random number relative to the canvas height
-       / -   add vx to the star - random velocity in the x direction
-       /-   add vy to the star - random velocity in the y direction
-       / -   add radius to the star - random size
-        -   return the star
-        -   bind the class to the method in the constructor
-    */
+    
     createStar(){
         let star = {
             star: {
@@ -257,7 +174,7 @@ class MidnightSky {
             },
             width: window.innerWidth,
             height: window.innerHeight,
-            velocity:  this.velocity,
+            velocity:  ((this.velocity*this.randomFloat(this.velocity))+(this.velocity*0.1)),
             length: 0,
             distance: 0,
             radius: this.randomNumber(this.radius)
@@ -271,74 +188,43 @@ class MidnightSky {
             star.line.color = this.randomColor();
         }
         if(this.star.randomWidth){
-            star.star.width = this.randomNumber(5);
+            star.star.width = this.randomNumber(6);
         }
-        // Figure out where its going
-         //star.destination.x,star.destination.y
     
        [star.destination.x,star.destination.y]  = this.randomDestination();
-    
-      
-
-        
         return star;
     }
-    
-    /*- Write the method createStars
-        -   repeatedly call the method createStar and add the new star to the
-            array of stars in the config object.  
-            The number of stars is in the
-            length property of the config object.
-        -   bind the class to the method in the constructor
-        -   call the method in the constructor
-        */
-
+    /*Create all Stars */
     createStars(e){
-
         let createStarCount = this.randomNumber(this.seedRate)+1;
         this.devLog("Creating " + createStarCount + "stars");
         for (let i=0; i< createStarCount; i++) {
-            this.devLog(this.stars.length + " < " + this.seedMaxStars);
+           // this.devLog(this.stars.length + " < " + this.seedMaxStars);
             if(this.stars.length < this.seedMaxStars){
               let newStar = this.createStar();
-              this.devLog("STAR" + JSON.stringify(newStar));
+              //this.devLog("STAR" + JSON.stringify(newStar));
                this.stars.push(newStar);
             }
         }
-        this.devLog("ALL STARS:" + JSON.stringify(this.stars));
     }        
-    /*
-    -   Write the method drawStar.  Pass in a star as a parameter
-        -   it should draw one star
-        -   bind the class to the method
-    */
+     /* Draw a single star*/ 
     drawStar(star){
-        //context.arc(x,y,r,sAngle,eAngle,counterclockwise);
-        this.devLog("Drawing Star:" + star);
-      
-
-        this.ctx.beginPath();
         this.ctx.lineWidth = star.line.width;
-        this.ctx.fileStyle = star.star.color;
+        this.ctx.fillStyle = star.star.color;
         this.ctx.strokeStyle = star.line.color;
-        this.ctx.shadowBlur = 4;
+        this.ctx.beginPath();
         this.ctx.arc(star.position.x,star.position.y,star.radius,0,2*Math.PI);
         this.ctx.stroke();
         this.ctx.fill();
-        this.devLog("Drawing Star: " + JSON.stringify(star));
     }
-    /*-   Write the method drawStars.  It should
-        -   clear the canvas
-        -   repeatedly call the method drawStar
-        -   bind the class to the method
-        -   call the method in the constructor
-    */
+    /* Draw all the stars */
     drawStars(){
             this.clearStars();
             for(let star in this.stars){
                 this.drawStar(this.stars[star]);
             }
     }
+    /* Delete a star */
     deleteStar(starToDelete){
         for(let star in this.stars){
             if((starToDelete.position.x == this.stars[star].position.x) &&
@@ -346,41 +232,20 @@ class MidnightSky {
               (starToDelete.destination.x == this.stars[star].destination.x) &&
               (starToDelete.position.y == this.stars[star].position.y)){
                 this.stars.splice(star,1);
-                this.devLog("StarRouteCompleted");
             }
         }
     }
+    /* Move a single Star*/
     moveStar(star){
-            // Lets See if we made it
-            // Rise / run
-
-            //if((Math.abs(star.position.x - star.destination.x) < this.threshold) && (Math.abs(star.position.y - star.destination.y) < this.threshold)) {
-            if((star.position.x == star.destination.x) && (star.position.y == star.destination.y)){
+            // Clear up dead stars
+            if((Math.abs(star.position.x) >= this.width-this.threshold) || (Math.abs(star.position.y) >= this.height-this.threshold)){
                 this.devLog("despawn star @ destination");
                 this.deleteStar(star);
             }
-            /*
-            // Going up
-            if(star.position.y > star.destination.y ){
-                star.position.y-=star.velocity*();
-
-            }
-            if(star.position.y < star.destination.y){
-                star.position.y+= star.velocity;
-            }
-
-            if(star.position.x < star.destination.x){
-                star.position.x+= star.velocity;
-            }
-            // going left
-            if(star.position.x > star.destination.x){
-                star.position.x-=star.velocity;
-            }
-            // going right
-          */
-
-         let y1 = star.position.y;
+            // Move star in aspect ratio (rise over run)
+          let y1 = star.position.y;
           let y2 = star.destination.y;
+         
           let x1 = star.position.x;
           let x2 = star.destination.x;
 
@@ -388,85 +253,110 @@ class MidnightSky {
           let run = x2-x1;
 
           let m = rise/run;
-          this.devLog("Rise:" + rise + " run: " + run);
             // going down
              if(star.position.y > star.destination.y ){
-                star.position.y-=Math.floor(star.velocity / Math.Abs(rise));
+                star.position.y-=star.velocity * Math.abs(rise);
 
             }
             // going up
             if(star.position.y < star.destination.y){
-                star.position.y+= Math.floor(star.velocity / Math.Abs(rise));
+                star.position.y+= star.velocity * Math.abs(rise);
             }
             // going right
             if(star.position.x < star.destination.x){
-                star.position.x+= Math.floor(star.velocity / Math.Abs(run));
+                star.position.x+= star.velocity * Math.abs(run);
             }
             // going left
             if(star.position.x > star.destination.x){
-                star.position.x-=Math.floor(star.velocity / Math.Abs(run));
+                star.position.x-=star.velocity * Math.abs(run);
             }
         return star;
     } 
+    /* Move all the Stars*/
     moveStars(){
         for(let star in this.stars){
             this.stars[star] = this.moveStar(this.stars[star]);
         }
-
     }
+    /* General Control for Animation */
     animateStars(){
         this.timer = setInterval(() => {
+            // Clear the Canvas
             this.clearStars();
-            this.createStars();
+            // Draw all the stars
             this.drawStars();
+            // Generate any New Stars
+            this.createStars();
+            // Process the movement for the stars - for the next draw
             this.moveStars();
-        }), 5000;
+            // Highlight Stars
+            if(this.highlightMode){
+                this.highlight();
+            }
+            // show menu button
+            this.drawMenuButton();
+
+            // show menu
+            if(this.menuOpen){
+                this.openMenu();
+            }
+            if(this.banner.open){
+                console.log("drawing banner");
+                this.drawBanner();
+            }
+        }), this.tickTime;
     }
+    /* Stop the stars from moving */
     stopStars(){
         this.devLog("STOPPING STARS" + this.timer);
         clearInterval(this.timer);
     }
-    /*
-    highlight(e) {
-        this.config.position.x = e.pageX - this.$canvas.offsetLeft;
-        this.config.position.y = e.pageY - this.$canvas.offsetTop;
-    }
-    drawLines () {
-        for (let i = 0; i < this.config.length; i++) {
-            for (let j = 0; j < this.config.length; j++) {
-                let iStar = this.config.stars[i];
-                let jStar = this.config.stars[j];
-                if ((iStar.x - jStar.x) < this.config.distance &&
-                    (iStar.y - jStar.y) < this.config.distance &&
-                    (iStar.x - jStar.x) > - this.config.distance &&
-                    (iStar.y - jStar.y) > - this.config.distance) {
-                    if ((iStar.x - this.config.position.x) < this.config.radius &&
-                        (iStar.y - this.config.position.y) < this.config.radius &&
-                        (iStar.x - this.config.position.x) > - this.config.radius &&
-                        (iStar.y - this.config.position.y) > - this.config.radius) {
-                        this.$context.beginPath();
-                        this.$context.moveTo(iStar.x, iStar.y);
-                        this.$context.lineTo(jStar.x, jStar.y);
-                        this.$context.stroke();
-                        this.$context.closePath();
-                    }
-                }
+    
+    highlight() {
+       
+       let x1 = this.mouseX;
+       let y1 = this.mouseY;
+ 
+        for(let star in this.stars){
+            let x2 = this.stars[star].position.x;
+            let y2 = this.stars[star].position.y;
+
+            // Calculate difference)
+            let distance = Math.sqrt(Math.pow((x2-x1), 2)+Math.pow((y2-y1),2))
+
+            if(distance < this.closenessThreshold){
+                this.drawLine(this.stars[star]);
             }
         }
+
     }
-    */
+    drawLine(star){
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.mouseX,this.mouseY);
+        this.ctx.lineTo(star.position.x,star.position.y);
+        this.ctx.lineWidth = star.line.width;
+        this.ctx.strokeStyle = star.line.color;
+        this.ctx.stroke();
+    }
     /* Helper functions*/
 
     // Generate a random Color
     randomColor(){
         /* lighter colors */
-        return "rgba(" + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + "," +      Math.floor(Math.random() * 255)  + ",0.9" + ")"; 
-        // let o = Math.round, r = Math.random, s = 255;
-        //return 'yellow';
+        return "rgba(" + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + "," +      Math.floor(Math.random() * 255)  + "," + this.gamma+  ")"; 
+        
     }
+
     randomNumber(max){
         return Math.floor(Math.random() * max );
     }
+    /* Return a random floating number */
+    randomFloat(max){
+        return Math.random() * max ;
+    }
+
+    /* Pick a destination for the star to go */    
     randomDestination(){
         let y = 0;
         let x = 0;
@@ -495,13 +385,237 @@ class MidnightSky {
         return [x,y];
         
     }
+    /* Clear the canvas */    
     clearStars(){
-         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+         this.ctx.fillStyle = this.backgroundColor;
+         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    }
+
+    // Menu Button
+    drawMenuButton(){
+        let buttonSize = this.menuSize;
+        let x = this.canvas.width-buttonSize;
+        let y = this.canvas.height-buttonSize;
+
+        this.ctx.strokeStyle = "red";
+        this.ctx.lineWidth = 2;
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(x,y , this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = "black";
+        this.ctx.font = "12px Arial";
+        this.ctx.fillText('X', x+7, y+15);
+    }
+    // Show Menu
+    openMenu(){
+        this.menuOpen = true;
+        this.ctx.strokeStyle = "red";
+        this.ctx.lineWidth = 2;
+        this.ctx.fillStyle = "white";
+        let x =this.canvas.width-(this.canvas.width*0.3);
+        let y =this.canvas.height-(this.canvas.height*0.5); 
+        this.ctx.fillRect(x,y, this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = "black";
+        this.ctx.font = "18px Arial";
+        x+= 35;
+        y+=30;
+        this.ctx.fillText('Midnight Sky', x, y);
+        y+=20;
+        this.ctx.font = "14px Arial";
+        this.ctx.fillText('by Robert Moore', x, y);
+        y+=15;
+        this.ctx.fillText('7/23/2018', x, y);
+        y+=20;
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText('Keyboard Commands:', x, y);
+        this.ctx.font = "14px Arial";
+        y+=20;
+        for(let key in this.keyList){
+            y+=15;
+            this.ctx.fillText(this.keyList[key], x, y);
+        }
+        x+=250;
+        y-=250;
+        this.ctx.font = "11px Arial";
+        this.ctx.fillText("Settings:", x, y); 
+        this.ctx.font = "10px Arial";
+        y+=25;
+        this.ctx.fillText("Current Stars:" + this.stars.length, x, y);  
+        y+=15;
+        this.ctx.fillText("Max Stars:" + this.seedMaxStars, x, y);  
+        y+=15;
+        this.ctx.fillText("Star Spawn Rate:" + this.seedRate, x, y); 
+        y+=15;
+        this.ctx.fillText("Star Color:" + this.star.color, x, y); 
+        y+=15;
+        this.ctx.fillText("Star Color Random:" + this.star.randomColor, x, y); 
+        y+=15;
+        this.ctx.fillText("Gamma:" + this.gamma, x, y); 
+        y+=15;
+        this.ctx.fillText("Destruction Zone:" + this.threshold, x, y); 
+                
+
+    }
+    closeMenu(){
+        this.menuOpen = false;
+    }
+    /* Bind keys */
+    bindKeys(){
+
+        this.keyList.push('[a]+ [z]- stars');
+        this.keyList.push('[s]+ [x]- spawn rate');
+        this.keyList.push('[d]+ [c]- destruction zone');
+        this.keyList.push('[q] highlight mode');
+        this.keyList.push('[f]+ [v]- gamma');
+        this.keyList.push('[1] star color - red');
+        this.keyList.push('[2] star color - yellow');
+        this.keyList.push('[3] star color - blue');
+        this.keyList.push('[h] toggle random star color');
+        this.keyList.push('[n] toggle random line color');
+        this.keyList.push('[4] line color - red');
+        this.keyList.push('[5] line color - yellow');
+        this.keyList.push('[6] line color - blue');
+        this.keyList.push('[j] increase speed');
+        this.keyList.push('[m] decrease speed');
+        this.keyList.push('[space] clear stars');
+
+        window.addEventListener('keyup',(e) => {
+            if(e.keyCode == 65){ this.increaseStarCount();  } // a
+            if(e.keyCode == 90){ this.decreaseStarCount();  } // z
+            if(e.keyCode == 83){ this.increaseSpawnRate();  } // s
+            if(e.keyCode == 88){ this.decreaseSpawnRate();  } // x
+            if(e.keyCode == 68){ this.increaseDestructionZone();  } // d
+            if(e.keyCode == 67){ this.decreaseDestructionZone();  } // c
+            if(e.keyCode == 81){ this.toggleHighlight();  } // q
+            if(e.keyCode == 70){ this.increaseHighlightDistance();  } // f
+            if(e.keyCode == 86){ this.decreaseHighlightDistance();  } // v
+            if(e.keyCode == 71){ this.increaseGamma();  } // g
+            if(e.keyCode == 66){ this.decreaseGamma();  } // b
+            if(e.keyCode == 49){ this.setStarColor("red");  } // 1
+            if(e.keyCode == 50){ this.setStarColor("yellow");  } // 2
+            if(e.keyCode == 51){ this.setStarColor("blue");  } // 3
+            if(e.keyCode == 72){ this.toggleStarColor();  } // h
+            if(e.keyCode == 78){ this.toggleLineColor();  } // n
+            if(e.keyCode == 52){ this.setLineColor("red");  } // 4
+            if(e.keyCode == 53){ this.setLineColor("yellow");  } // 5
+            if(e.keyCode == 54){ this.setLineColor("blue");  } // 6
+            if(e.keyCode == 32){ this.clearAllStars();  } // space
+            if(e.keyCode == 74){ this.increaseVelocity();  } // j
+            if(e.keyCode == 77){ this.decreaseVelocity();  } // m
+        });
+    }
+    increaseStarCount(){
+        this.seedMaxStars = Math.floor(this.seedMaxStars*1.1);
+        this.newBanner("Increasing Star Count");
+    }
+    decreaseStarCount(){
+        this.seedMaxStars = Math.floor(this.seedMaxStars*0.9);
+         this.newBanner("Decreasing Star Count");
+    }
+    increaseSpawnRate(){
+        this.seedRate =  Math.floor(this.seedRate*1.1);
+         this.newBanner("Increase Spawn Rate");
+    }
+    decreaseSpawnRate(){
+        this.seedRate =  Math.floor(this.seedRate*0.9);
+        this.newBanner("Decrease Spawn Rate");   
+    }
+    increaseDestructionZone(){
+        this.threshold  = Math.floor(this.threshold *1.1);
+        this.newBanner("Increase Destruction Zone");
+    }
+    decreaseDestructionZone(){
+        this.threshold  = Math.floor(this.threshold *0.9);
+        this.newBanner("Decrease Destruction Zone");
+    }    
+    toggleHighlight(){
+        this.highlightMode = !this.highlightMode;
+        this.newBanner("Setting");
+    }
+    increaseHighlightDistance(){
+        this.closenessThreshold = Math.floor(this.closenessThreshold*1.1);
+        this.newBanner("Increasing Highlight Distance");
+    }
+    decreaseHighlightDistance(){
+        this.closenessThreshold = Math.floor(this.closenessThreshold*0.9);
+        this.newBanner("Decreasing Highlight distance");
+    }
+    increaseGamma(){
+        if(this.gamma < 1 ) {
+            this.gamma += 0.1;
+        }
+        this.newBanner("Increasing Star Gamma");
+        
+    }
+    decreaseGamma(){
+        if(this.gamma > 0.1){
+            this.gamma -= 0.1;
+        }
+        this.newBanner("Decreasing Star Gamma");
+    }
+    setStarColor(color){
+        this.star.color = color;
+        this.star.randomColor = false;
+        this.newBanner("Setting Star Color to " + this.star.color);
+    }
+    toggleStarColor(){
+        this.star.randomColor = !this.star.randomColor;
+        this.newBanner("Random Star Color set to " + this.star.randomColor);
+    }
+    toggleLineColor(){
+        this.line.randomColor = !this.line.randomColor;
+        this.newBanner("Random Line Color set to " + this.line.randomColor);
+    }
+    setLineColor(color){
+        this.line.color = color;
+        this.newBanner("Line Color set to " + color);
+    }
+    clearAllStars(){
+        this.stars = [];
+        this.newBanner("Clear Stars");
+    }
+    increaseVelocity(){
+        this.velocity = this.velocity*1.1;
+        this.newBanner("Increasing Speed");
+    }
+    decreaseVelocity(){
+        this.velocity = this.velocity*0.9;
+        this.newBanner("Decreasing Speed");
+    }
+    /* Create a New Banner */
+    newBanner(text){
+        console.log(text);
+        this.banner.text = text;
+        this.banner.timeLeft = 500;
+        this.banner.opacity = 1;
+        this.banner.open = true;
+    }
+    drawBanner(){
+        let textAlign = this.ctx.textAlign;
+        this.ctx.textAlign = "center";
+        if(this.banner.timeLeft < 0){
+            this.banner.open = false;
+        }
+        this.banner.timeLeft-=this.tickTime;
+        this.banner.opacity-= 0.1;
+
+        this.ctx.strokeStyle = 'rgba(255,255,255,' + this.banner.opacity + ')';
+        this.ctx.fillStyle = 'rgba(255,255,255,' + this.banner.opacity + ')';
+        let x = this.width/2;
+        let y = this.height/5;
+        this.ctx.font = "44px Arial";
+        this.ctx.fillText(this.banner.text, x, y);
+        
+
+        // set it back
+        this.ctx.textAlign = textAlign;
     }
 }
 
 let midnightsky;
-window.addEventListener('load', () => midnightsky = new MidnightSky({ devMode: "true"}));
+window.addEventListener('load', () => midnightsky = new MidnightSky({ devMode: false}));
 window.addEventListener('resize', () => {
     midnightsky.stopStars();
     //midnightsky = new MidnightSky();
