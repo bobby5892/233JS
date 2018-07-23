@@ -468,7 +468,8 @@ class MidnightSky {
         this.keyList.push('[s]+ [x]- spawn rate');
         this.keyList.push('[d]+ [c]- destruction zone');
         this.keyList.push('[q] highlight mode');
-        this.keyList.push('[f]+ [v]- gamma');
+        this.keyList.push('[v]+ [f]- highlight distance');
+        this.keyList.push('[g]+ [b]- gamma');
         this.keyList.push('[1] star color - red');
         this.keyList.push('[2] star color - yellow');
         this.keyList.push('[3] star color - blue');
