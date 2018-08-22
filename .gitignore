@@ -1,3 +1,4 @@
 vi/drive-download-20180720T151947Z-001.zip
 vi/drive-download-20180720T151947Z-001/memeCreatorPart1.mp4
 *.mp4
+*node_modules*

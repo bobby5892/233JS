@@ -47,8 +47,8 @@ class MidnightSky {
             radius: 10, // Max dimensions of star
             gamma:0.9  // Brightness of Colors 0-1
         };
-        this.menuSize = 20;
-        this.menuOpen = false;
+        this.menuSize = 50;
+        this.menuOpen = true;
         this.banner = {
             open: false,
             text: "banner",
@@ -405,7 +405,7 @@ class MidnightSky {
 
         this.ctx.fillStyle = "black";
         this.ctx.font = "12px Arial";
-        this.ctx.fillText('X', x+7, y+15);
+        this.ctx.fillText('Menu', x+7, y+15);
     }
     // Show Menu
     openMenu(){

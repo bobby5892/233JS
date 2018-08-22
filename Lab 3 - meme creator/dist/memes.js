@@ -1,10 +1,9 @@
-var meme =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	function hotDisposeChunk(chunkId) {
 /******/ 		delete installedChunks[chunkId];
 /******/ 	}
-/******/ 	var parentHotUpdateCallback = window["webpackHotUpdatememe"];
-/******/ 	window["webpackHotUpdatememe"] = // eslint-disable-next-line no-unused-vars
+/******/ 	var parentHotUpdateCallback = window["webpackHotUpdate"];
+/******/ 	window["webpackHotUpdate"] = // eslint-disable-next-line no-unused-vars
 /******/ 	function webpackHotUpdateCallback(chunkId, moreModules) {
 /******/ 		hotAddUpdateChunk(chunkId, moreModules);
 /******/ 		if (parentHotUpdateCallback) parentHotUpdateCallback(chunkId, moreModules);
@@ -65,7 +64,7 @@ var meme =
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "90405ddbff29e9489bdd";
+/******/ 	var hotCurrentHash = "e84dc4b8b47ce7b20a22";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -164,7 +163,7 @@ var meme =
 /******/ 			// Module API
 /******/ 			active: true,
 /******/ 			accept: function(dep, callback) {
-/******/ 				if (typeof dep === "undefined") hot._selfAccepted = true;
+/******/ 				if (dep === undefined) hot._selfAccepted = true;
 /******/ 				else if (typeof dep === "function") hot._selfAccepted = dep;
 /******/ 				else if (typeof dep === "object")
 /******/ 					for (var i = 0; i < dep.length; i++)
@@ -172,7 +171,7 @@ var meme =
 /******/ 				else hot._acceptedDependencies[dep] = callback || function() {};
 /******/ 			},
 /******/ 			decline: function(dep) {
-/******/ 				if (typeof dep === "undefined") hot._selfDeclined = true;
+/******/ 				if (dep === undefined) hot._selfDeclined = true;
 /******/ 				else if (typeof dep === "object")
 /******/ 					for (var i = 0; i < dep.length; i++)
 /******/ 						hot._declinedDependencies[dep[i]] = true;
@@ -14539,6 +14538,8 @@ var MeMe = function () {
 		function MeMe() {
 				_classCallCheck(this, MeMe);
 
+				this.memeWidth = '400';
+				this.memeHeight = '300';
 				//use $ prefix for DOM elements
 				this.canvas = window.document.getElementById("canvas");
 				this.ctx = this.canvas.getContext('2d');
@@ -14546,8 +14547,8 @@ var MeMe = function () {
 						'file': window.document.getElementById("fileSelector"),
 						'topText': window.document.getElementById("topText"),
 						'bottomText': window.document.getElementById("bottomText"),
-						'generate': window.document.getElementById("generate")
-
+						'generate': window.document.getElementById("generate"),
+						'downloadLink': window.document.getElementById("downloadLink")
 						/* Create Canvas Element */
 				};this.createCanvas();
 				this.setListeners();
@@ -14557,12 +14558,14 @@ var MeMe = function () {
 				key: 'createCanvas',
 				value: function createCanvas() {
 						// set initial height and width of canvas
-						this.canvas.style.width = window.innerWidth / 3;
-						this.canvas.style.height = window.innerHeight / 3;
+						this.canvas.style.width = '400';
+						this.canvas.style.height = '300';
 				}
 		}, {
 				key: 'createMeme',
 				value: function createMeme() {
+						var _this = this;
+
 						console.log("Creating Meme");
 						/*
       • What method do we use to draw an image on the context?
@@ -14589,15 +14592,112 @@ var MeMe = function () {
       		ctx.strokeStyle = color
       • Let’s see if we can write the code …
       */
+
+						/* Put the Image on the Canvas */
+						var reader = new FileReader();
+						reader.onload = function (event) {
+								var img = new Image();
+								img.onload = function () {
+										var imgWidth = img.naturalWidth;
+										var screenWidth = _this.memeWdith;
+										var scaleX = 1;
+										if (imgWidth > screenWidth) scaleX = screenWidth / imgWidth;
+										var imgHeight = img.naturalHeight;
+										var screenHeight = _this.memeHeight;
+										var scaleY = 1;
+										if (imgHeight > screenHeight) scaleY = screenHeight / imgHeight;
+										var scale = scaleY;
+										if (scaleX < scaleY) scale = scaleX;
+										if (scale < 1) {
+												imgHeight = imgHeight * scale;
+												imgWidth = imgWidth * scale;
+										}
+
+										_this.canvas.height = imgHeight;
+										_this.canvas.width = imgWidth;
+
+										_this.ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, imgWidth, imgHeight);
+
+										_this.addText();
+										_this.addDownloadLink();
+								};
+
+								img.src = event.target.result;
+						};
+						reader.readAsDataURL(this.form.file.files[0]);
+				}
+		}, {
+				key: 'addText',
+				value: function addText() {
+						/* Put Text On Canvas */
+						this.ctx.textAlign = "center";
+						this.ctx.strokeStyle = "black";
+						this.ctx.fillStyle = "white";
+						this.ctx.font = '48px serif';
+						this.ctx.fillText(this.form.topText.value, this.memeWidth / 2, 50, this.memeWidth);
+
+						this.ctx.font = '48px serif';
+						this.ctx.fillText(this.form.bottomText.value, this.memeWidth / 2, 250, this.memeWidth);
+				}
+		}, {
+				key: 'addDownloadLink',
+				value: function addDownloadLink() {
+
+						var link = this.form.file.files[0].name;
+						this.form.downloadLink.innerHTML = '<a id="downloadAnchor">Download</a>';
+				}
+		}, {
+				key: 'hasImage',
+				value: function hasImage() {
+						if (this.form.file.files.length > 0) {
+								return true;
+						}
+						return false;
 				}
 		}, {
 				key: 'setListeners',
 				value: function setListeners() {
-						var _this = this;
+						var _this2 = this;
 
 						this.form.generate.addEventListener('click', function () {
-								_this.createMeme();
+								if (_this2.hasImage()) {
+										_this2.createMeme();
+								} else {
+										alert("You must first select an Image");
+								}
 						});
+						this.form.topText.addEventListener('change', function () {
+								if (_this2.hasImage()) {
+										_this2.createMeme();
+								}
+						});
+						this.form.bottomText.addEventListener('change', function () {
+								if (_this2.hasImage()) {
+										_this2.createMeme();
+								}
+						});
+						window.document.addEventListener("keyup", function () {
+								if (_this2.hasImage()) {
+										_this2.createMeme();
+								}
+						});
+						window.document.addEventListener("click", function (event) {
+								if (event.srcElement.id == "downloadAnchor") {
+										_this2.downloadMeme();
+								}
+						});
+
+						// bind
+						this.downloadMeme.bind(this);
+				}
+		}, {
+				key: 'downloadMeme',
+				value: function downloadMeme(e) {
+						var link = window.document.getElementById("downloadAnchor");
+						link.setAttribute('download', 'Meme.jpg');
+						link.setAttribute('href', this.canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream"));
+						link.click();
+						console.log("should be downloading");
 				}
 		}]);
 
@@ -14607,7 +14707,6 @@ var MeMe = function () {
 var meMe = void 0;
 window.addEventListener("load", function () {
 		meMe = new MeMe();
-		console.log(meMe);
 });
 
 /***/ })
